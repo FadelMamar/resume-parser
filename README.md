@@ -1,5 +1,7 @@
 # Resume Parser
 
+![Resume Parser Demo](assets/image.png)
+
 A modern, LLM/VLM-powered resume parser with a Streamlit web interface. Upload PDF resumes and extract structured candidate information using state-of-the-art language and vision models.
 
 ## Features
@@ -119,3 +121,16 @@ resume-parser/
 ## License
 
 [MIT](LICENSE) (or your license here)
+
+## Running with Docker Compose
+
+You can easily deploy the app using Docker Compose. The provided `docker-compose.yaml` will build the image from the included `Dockerfile` and start the service.
+
+```sh
+# Build and run the app
+docker-compose up --build
+```
+
+- The app will be available at [http://localhost:8501](http://localhost:8501).
+- Environment variables are loaded from the `.env` file (copied from `example.env`).
+- To enable live code updates during development, uncomment the `volumes` section in `docker-compose.yaml`.
