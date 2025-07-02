@@ -20,10 +20,13 @@ class TextExtractor:
     VLM Extractor with configurable prompting strategies (e.g., CoT, Refine) using dspy modules.
     """
 
-    def __init__(self,model, strategy:str,temperature=0.7, cache=True):
+    def __init__(self,model:str, strategy:str,temperature=0.7, cache=True):
         # Configure Dspy to use the local VLM endpoint
         if VLM_API_BASE is None or VLM_API_KEY is None:
             raise ValueError("VLM_API_BASE and VLM_API_KEY must be set in the environment variables")
+        
+        if not isinstance(model,str):
+            raise ValueError(f"model must be a string, got {type(model)}")
         
         if model.startswith("gemini/"):
             self.base_vlm = dspy.LM(model, 
@@ -47,22 +50,16 @@ class TextExtractor:
         img.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode()
 
-    def preprocess(self, input_data:str|bytes|Image.Image)->dspy.Image:
+    def preprocess(self, input_data:Image.Image)->dspy.Image:
         """
         Preprocess input: if str, treat as base64-encoded image and convert to bytes.
         If bytes, return as is.
         """
-        if isinstance(input_data, str):
-            # Assume base64-encoded image string
-            image =  base64.b64decode(input_data)
-        elif isinstance(input_data, bytes):
-            image =  input_data
-        elif isinstance(input_data, Image.Image):
-            image = self.image_to_base64(input_data)
-        else:
-            raise ValueError("Input must be a base64 string, bytes, or PIL Image.")
-
-        return dspy.Image.from_bytes(image)
+        assert isinstance(input_data, Image.Image), "Input must be a PIL Image."
+        buf = BytesIO()
+        input_data.convert("RGB").save(buf, format="JPEG")
+        image = buf.getvalue()
+        return dspy.Image.from_file(image)
     
     def run(self, images:List[Image.Image],):
         """
@@ -81,8 +78,13 @@ class TextExtractor:
             raise ValueError(f"Invalid strategy: {self.strategy}")
 
         images = [self.preprocess(image) for image in images]
-        with dspy.context(llm=self.base_vlm):
-            return vlm(images=images).extracted_text
+        try:
+            with dspy.context(llm=self.base_vlm):
+                result = vlm(images=images).extracted_text
+        except Exception as e:
+            dspy.configure(lm=self.base_vlm)
+            result = vlm(images=images).extracted_text
+        return result
 
 def extract_text_from_images(model,images: List[Image.Image],strategy:str="naive",temperature:float=0.7, cache:bool=True) -> List[str]:
     """

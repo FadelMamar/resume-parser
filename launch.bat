@@ -6,7 +6,7 @@ call .venv\Scripts\activate
 
 call load_env.bat
 
-start streamlit run src/ui.py --server.port 8500
+call streamlit run ui.py --server.port 8500
 
 @REM start D:\workspace\llama-cpp\llama-server.exe -hf ggml-org/Qwen2.5-VL-3B-Instruct-GGUF:q4_k_m ^
 @REM     --port 8001 --ctx-size 20000

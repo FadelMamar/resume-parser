@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  resume-parser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    # Uncomment the following lines for live code updates during development
+    # volumes:
+    #   - ./src:/app/src
+    #   - ./ui.py:/app/ui.py
+    #   - ./pyproject.toml:/app/pyproject.toml

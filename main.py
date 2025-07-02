@@ -6,4 +6,4 @@ def main():
 
 
 if __name__ == "__main__":
-    os.system(f"streamlit run src/ui.py")
+    pass

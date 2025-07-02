@@ -39,13 +39,23 @@ class FieldExtractor:
     def __init__(self, model:str, strategy: str, temperature=0.7, cache=True):
         if LLM_API_BASE is None or LLM_API_KEY is None:
             raise ValueError("LLM_API_BASE and LLM_API_KEY must be set in the environment variables")
-        self.base_llm = dspy.LM(
-            model,
-            temperature=temperature,
-            cache=cache,
-            api_key=LLM_API_KEY,
-            base_url=LLM_API_BASE,
-        )
+        
+        if not isinstance(model,str):
+            raise ValueError(f"model must be a string, got {type(model)}")
+        
+        if model.startswith("gemini/"):
+            self.base_llm = dspy.LM(model, 
+                         temperature=temperature,
+                         cache=cache,
+                         api_key=LLM_API_KEY,
+                        )
+        else:
+            self.base_llm = dspy.LM(model, 
+                            temperature=temperature,
+                            cache=cache,
+                            api_key=LLM_API_KEY,
+                            base_url=LLM_API_BASE,
+                            )
         self.strategy = strategy
         assert self.strategy in ["cot", "refine", "naive"], "Strategy must be either 'cot', 'refine', or 'naive'"
 
@@ -62,15 +72,14 @@ class FieldExtractor:
             extractor = dspy.Predict(ResumeExtractionSignature)
         else:
             raise ValueError(f"Invalid strategy: {self.strategy}")
-        with dspy.context(llm=self.base_llm):
+        try:
+            with dspy.context(llm=self.base_llm):
+                result = extractor(text=text).extracted_fields
+        except Exception as e:
+            dspy.configure(lm=self.base_llm)
             result = extractor(text=text).extracted_fields
-        return ResumeFields(
-            name=result.name or None,
-            surname=result.surname or None,
-            current_profession=result.current_profession or None,
-            profile_category=result.profile_category or None,
-            years_experience=float(result.years_experience) if result.years_experience else None,
-        )
+
+        return result
 
 def extract_resume_fields(model, text: str, strategy: str = "naive", temperature: float = 0.7, cache: bool = True) -> ResumeFields:
     extractor = FieldExtractor(model=model, strategy=strategy, temperature=temperature, cache=cache)
