@@ -1,0 +1,12 @@
+[project]
+name = "resumeparser"
+version = "0.1.0"
+description = "Resume parsing web service with VLM and LLM"
+readme = "README.md"
+requires-python = ">=3.8,<3.13"
+dependencies = [
+    "dspy>=0.1.4",
+    "pdf2image>=1.17.0",
+    "streamlit>=1.40.1",
+]
+
