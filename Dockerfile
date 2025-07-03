@@ -23,6 +23,9 @@ COPY example.env .env
 
 # Expose Streamlit default port
 EXPOSE 8501
+RUN mkdir -p /data
+VOLUME [ "/data" ]
+ENV DSPY_CACHEDIR=/data/.cache_dspy
 
 # Run the Streamlit app
 CMD ["streamlit", "run", "ui.py", "--server.port=8501", "--server.address=0.0.0.0"]
