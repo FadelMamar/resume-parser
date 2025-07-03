@@ -1,6 +1,6 @@
 # ---------- Stage 1: Builder ----------
 FROM python:3.11-slim-bookworm AS builder
-COPY --from=ghcr.io/astral-sh/uv:0.7.3 /uv /uvx /bin/
+# COPY --from=ghcr.io/astral-sh/uv:0.7.3 /uv /uvx /bin/
 
 # Prepare working directory
 WORKDIR /app
@@ -10,17 +10,16 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-
+ENV UV_SYSTEM_PYTHON=1
 # Copy the rest of the code
 COPY src/ ./src/
-COPY pyproject.toml ./
-RUN uv pip install --system --no-cache-dir -e .
+COPY pyproject.toml .
+RUN --mount=from=ghcr.io/astral-sh/uv:0.7.3,source=/uv,target=/bin/uv uv pip install --system --no-cache-dir -e .
+
+#RUN uv pip install --system --no-cache-dir -e .
 
 COPY ui.py ./
 COPY example.env .env
-
-# Set PYTHONPATH so src/ is importable
-# ENV PYTHONPATH="/app/src"
 
 # Expose Streamlit default port
 EXPOSE 8501
